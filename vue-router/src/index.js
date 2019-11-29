@@ -79,7 +79,7 @@ export default class VueRouter {
   get currentRoute (): ?Route {
     return this.history && this.history.current
   }
-
+  // 初始化
   init (app: any /* Vue component instance */) {
     process.env.NODE_ENV !== 'production' && assert(
       install.installed,
@@ -129,27 +129,27 @@ export default class VueRouter {
       })
     })
   }
-
+  // 导航守卫 全局前置守卫
   beforeEach (fn: Function): Function {
     return registerHook(this.beforeHooks, fn)
   }
-
+  // 导航守卫 全局解析守卫
   beforeResolve (fn: Function): Function {
     return registerHook(this.resolveHooks, fn)
   }
-
+  // 导航守卫 全局后置守卫
   afterEach (fn: Function): Function {
     return registerHook(this.afterHooks, fn)
   }
-
+  // 路由完成初始化导航时调用
   onReady (cb: Function, errorCb?: Function) {
     this.history.onReady(cb, errorCb)
   }
-
+  // 路由导航过程中错误被调用
   onError (errorCb: Function) {
     this.history.onError(errorCb)
   }
-
+  // 访问路由实例 跳转页面 this.$router.push
   push (location: RawLocation, onComplete?: Function, onAbort?: Function) {
     // $flow-disable-line
     if (!onComplete && !onAbort && typeof Promise !== 'undefined') {
@@ -160,7 +160,7 @@ export default class VueRouter {
       this.history.push(location, onComplete, onAbort)
     }
   }
-
+  // 访问路由实例 也能跳转页面  但是不会向history中添加新纪录 而是替换掉当前的history记录
   replace (location: RawLocation, onComplete?: Function, onAbort?: Function) {
     // $flow-disable-line
     if (!onComplete && !onAbort && typeof Promise !== 'undefined') {
@@ -171,15 +171,15 @@ export default class VueRouter {
       this.history.replace(location, onComplete, onAbort)
     }
   }
-
+  // 向前n步
   go (n: number) {
     this.history.go(n)
   }
-
+  // 向后一步
   back () {
     this.go(-1)
   }
-
+  // 向前一步
   forward () {
     this.go(1)
   }
@@ -240,7 +240,11 @@ export default class VueRouter {
     }
   }
 }
-
+/**
+ * 钩子注册
+ * @param {*} list 
+ * @param {*} fn 
+ */
 function registerHook (list: Array<any>, fn: Function): Function {
   list.push(fn)
   return () => {
@@ -248,15 +252,21 @@ function registerHook (list: Array<any>, fn: Function): Function {
     if (i > -1) list.splice(i, 1)
   }
 }
-
+// 创建url链接
+/**
+ * @param {string} base // 路由的base路径
+ * @param {string} fullPath // 路由走的全路径
+ * @param {*} mode // 路由模式
+ */
 function createHref (base: string, fullPath: string, mode) {
+  // 如果是hash模式 用#拼接
   var path = mode === 'hash' ? '#' + fullPath : fullPath
   return base ? cleanPath(base + '/' + path) : path
 }
-
+// 注册install、版本
 VueRouter.install = install
 VueRouter.version = '__VERSION__'
-
+// 在浏览器直接引用vue-router 自动使用插件该插件
 if (inBrowser && window.Vue) {
   window.Vue.use(VueRouter)
 }
