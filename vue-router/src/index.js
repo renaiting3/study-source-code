@@ -67,7 +67,7 @@ export default class VueRouter {
         }
     }
   }
-
+  
   match (
     raw: RawLocation,
     current?: Route,
