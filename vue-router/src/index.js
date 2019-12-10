@@ -15,6 +15,21 @@ import { AbstractHistory } from './history/abstract'
 
 import type { Matcher } from './create-matcher'
 
+/**
+ * 参考：
+ * https://blog.csdn.net/u013938465/article/details/79421239
+ */
+
+
+/**
+ * 生成实例过程中，主要做了以下两件事
+ * 1、根据配置数组（传入的routes）生成路由配置表
+ * 2、根据不同模式生成监控路由变化的history对象
+ * 注：History类由HTML5History、hashHistory、AbstractHistory三类继承
+ * history/base.js 实现了基本history操作
+ * history/html5.js、history/hash.js、history/abstract.js继承了base，只是根据不同的模式封装了一些基本操作
+ */
+
 export default class VueRouter {
   static install: () => void;
   static version: string;
@@ -35,22 +50,27 @@ export default class VueRouter {
   constructor (options: RouterOptions = {}) {
     this.app = null
     this.apps = []
+    // vueRouter的配置项
     this.options = options
+    // 三个钩子
     this.beforeHooks = []
     this.resolveHooks = []
     this.afterHooks = []
-    this.matcher = createMatcher(options.routes || [], this)
-
+    // 创建路由匹配实例：传入我们的routes,包含path和component对象
+    this.matcher = createMatcher(options.routes || [], this) // 生成匹配表
+    // 判断路由模式
     let mode = options.mode || 'hash'
+    // 兼容低版本不支持history模式 如果不支持 回退到hash模式
     this.fallback = mode === 'history' && !supportsPushState && options.fallback !== false
     if (this.fallback) {
       mode = 'hash'
     }
+    // 非浏览器 node运行环境 mode = 'abstract'
     if (!inBrowser) {
       mode = 'abstract'
     }
     this.mode = mode
-
+    // 根据模式类型创建不同的history实例
     switch (mode) {
       case 'history':
         this.history = new HTML5History(this, options.base)
@@ -99,13 +119,13 @@ export default class VueRouter {
       // we do not release the router so it can be reused
       if (this.app === app) this.app = this.apps[0] || null
     })
-
+    // 主程序已经初始化 不需要再重新初始化
     // main app previously initialized
     // return as we don't need to set up new history listener
     if (this.app) {
       return
     }
-
+    // 初次初始化
     this.app = app
 
     const history = this.history
@@ -113,6 +133,7 @@ export default class VueRouter {
     if (history instanceof HTML5History) {
       history.transitionTo(history.getCurrentLocation())
     } else if (history instanceof HashHistory) {
+      // 建立hash监听
       const setupHashListener = () => {
         history.setupListeners()
       }
@@ -199,7 +220,7 @@ export default class VueRouter {
       })
     }))
   }
-
+  // 拼接路径
   resolve (
     to: RawLocation,
     current?: Route,
@@ -240,8 +261,7 @@ export default class VueRouter {
     }
   }
 }
-/**
- * 钩子注册
+/** 钩子注册
  * @param {*} list 
  * @param {*} fn 
  */
