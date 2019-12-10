@@ -1,5 +1,5 @@
 /* @flow */
-
+// _Vue 避免把Vue打包 增加项目体积
 import { _Vue } from '../install'
 import type Router from '../index'
 import { inBrowser } from '../util/dom'
@@ -35,6 +35,7 @@ export class History {
     this.router = router
     this.base = normalizeBase(base)
     // start with a route object that stands for "nowhere"
+    // 生成一个基础的route对象
     this.current = START
     this.pending = null
     this.ready = false
@@ -61,21 +62,31 @@ export class History {
   onError (errorCb: Function) {
     this.errorCbs.push(errorCb)
   }
-
+  /**
+   * @param {RawLocation} location 为我们当前的路由
+   * @param {Function} onComplete
+   * @param {Function} onAbort
+   */
   transitionTo (
     location: RawLocation,
     onComplete?: Function,
     onAbort?: Function
   ) {
+    
+  // 调用VueRouter的match方法获取匹配的路由对象，创建下一个状态的路由对象
+  // this.current 是我们保存的当前状态的路由对象
     const route = this.router.match(location, this.current)
     this.confirmTransition(
       route,
       () => {
+        // 更新当前的route对象
         this.updateRoute(route)
         onComplete && onComplete(route)
+        // 调用方法更新URL
         this.ensureURL()
 
         // fire ready cbs once
+        // 调用成功后的ready的回调函数
         if (!this.ready) {
           this.ready = true
           this.readyCbs.forEach(cb => {

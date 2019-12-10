@@ -18,6 +18,7 @@ import type { Matcher } from './create-matcher'
 /**
  * 参考：
  * https://blog.csdn.net/u013938465/article/details/79421239
+ * https://segmentfault.com/a/1190000020245449?utm_source=tag-newest#item-2-5
  */
 
 
@@ -106,7 +107,7 @@ export default class VueRouter {
       `not installed. Make sure to call \`Vue.use(VueRouter)\` ` +
       `before creating root instance.`
     )
-
+    // app 指的是我们实例化的Vue实例
     this.apps.push(app)
 
     // set up app destroyed handler
@@ -125,18 +126,23 @@ export default class VueRouter {
     if (this.app) {
       return
     }
-    // 初次初始化
+    // 初次初始化 将VueRouter内的app指向Vue实例
     this.app = app
 
     const history = this.history
-
+    // 针对HTML5History 和 HashHistory 特殊处理
+    // 因为在这两种模式下才有可能存在进入时候不是默认页
+    // 需要根据当前浏览器地址栏里面path和hash来激活对应的路由
+    // 通过hstory的transitionTo方法来达到目的
     if (history instanceof HTML5History) {
+      // HTML5History  transitionTo
       history.transitionTo(history.getCurrentLocation())
     } else if (history instanceof HashHistory) {
       // 建立hash监听
       const setupHashListener = () => {
         history.setupListeners()
       }
+      // HashHistory  transitionTo
       history.transitionTo(
         history.getCurrentLocation(),
         setupHashListener,

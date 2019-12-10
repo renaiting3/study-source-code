@@ -8,34 +8,43 @@ import { fillParams } from './util/params'
 import { createRouteMap } from './create-route-map'
 import { normalizeLocation } from './util/location'
 
+// 为creatematcher 定义返回类型
 export type Matcher = {
   match: (raw: RawLocation, current?: Route, redirectedFrom?: Location) => Route;
   addRoutes: (routes: Array<RouteConfig>) => void;
 };
 
-export function createMatcher (
-  routes: Array<RouteConfig>,
-  router: VueRouter
-): Matcher {
+/**
+ * 创建路由匹配表
+ * @param {*} routes 为我们初始化VueRouter的路由配置
+ * @param {*} router VueRouter实例
+ */
+export function createMatcher ( routes: Array<RouteConfig>, router: VueRouter ): Matcher {
+  // pathList 是根据routes生成的path数组
+  // pathMap 是根据path的名称生成的map
+  // 如果我们在路由上配置了定义了name，那么就会有一个namMap
   const { pathList, pathMap, nameMap } = createRouteMap(routes)
-  // 增加路由
+  // 增加路由 根据新的routes生成路由
   function addRoutes (routes) {
     createRouteMap(routes, pathList, pathMap, nameMap)
   }
-
+  // 路由匹配函数
   function match (
     raw: RawLocation,
     currentRoute?: Route,
     redirectedFrom?: Location
   ): Route {
+    // 简单讲就是拿出我们的path parms query 等等
     const location = normalizeLocation(raw, currentRoute, false, router)
     const { name } = location
 
     if (name) {
+      // 如果有name的话 就去nameMap中去找到这条路由记录
       const record = nameMap[name]
       if (process.env.NODE_ENV !== 'production') {
         warn(record, `Route with name '${name}' does not exist`)
       }
+      // 如果没有这条路由记录 就去创建一条路由对象
       if (!record) return _createRoute(null, location)
       const paramNames = record.regex.keys
         .filter(key => !key.optional)
@@ -60,6 +69,8 @@ export function createMatcher (
       for (let i = 0; i < pathList.length; i++) {
         const path = pathList[i]
         const record = pathMap[path]
+        // 根据当前路径进行路由匹配
+        // 如果匹配就创建一条路由对象
         if (matchRoute(record.regex, location.path, location.params)) {
           return _createRoute(record, location, redirectedFrom)
         }
@@ -155,6 +166,7 @@ export function createMatcher (
     location: Location,
     redirectedFrom?: Location
   ): Route {
+    // 根据不同条件去创建路由对象
     if (record && record.redirect) {
       return redirect(record, redirectedFrom || location)
     }
