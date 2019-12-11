@@ -149,7 +149,7 @@ export default class VueRouter {
         setupHashListener
       )
     }
-
+    // 设置路由改变时候的监听
     history.listen(route => {
       this.apps.forEach((app) => {
         app._route = route

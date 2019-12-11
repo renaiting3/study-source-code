@@ -98,6 +98,7 @@ export class History {
         if (onAbort) {
           onAbort(err)
         }
+        // 调用失败的err回调函数
         if (err && !this.ready) {
           this.ready = true
           this.readyErrorCbs.forEach(cb => {
@@ -127,34 +128,44 @@ export class History {
       }
       onAbort && onAbort(err)
     }
+    // 如果同一个路由就不跳转
     if (
       isSameRoute(route, current) &&
       // in the case the route map has been dynamically appended to
+      // 在这种情况下 routeMap已经动态的被插入
       route.matched.length === current.matched.length
     ) {
+      // 更新URL
       this.ensureURL()
       return abort(new NavigationDuplicated(route))
     }
-
+    // 交叉比对当前路由的路由记录和现在的这个路由的路由记录
+    // 以便能准确的得到父子路由更新的情况下可以确切的知道
+    // 哪些组件需要更新 哪些组件不需要更新
     const { updated, deactivated, activated } = resolveQueue(
       this.current.matched,
       route.matched
+      // matched里头存储的是路由记录的数组
     )
-
+      // 整个切换周期的队列，待执行的各种钩子更新队列
     const queue: Array<?NavigationGuard> = [].concat(
       // in-component leave guards
+      // 提取组件的beforeRouteLeave钩子
       extractLeaveGuards(deactivated),
       // global before hooks
       this.router.beforeHooks,
       // in-component update hooks
+      // 提取组件的beforeRouteUpdate钩子
       extractUpdateHooks(updated),
       // in-config enter guards
       activated.map(m => m.beforeEnter),
       // async components
+      // 异步处理组件
       resolveAsyncComponents(activated)
     )
-
+    // 保存下一个状态的路由
     this.pending = route
+    // 每一个队列执行的iterator函数
     const iterator = (hook: NavigationGuard, next) => {
       if (this.pending !== route) {
         return abort()
@@ -186,18 +197,22 @@ export class History {
         abort(e)
       }
     }
-
+    // 执行各种钩子队列
     runQueue(queue, iterator, () => {
       const postEnterCbs = []
       const isValid = () => this.current === route
       // wait until async components are resolved before
       // extracting in-component enter guards
+      // 等待异步组件OK时，执行组件内的钩子
       const enterGuards = extractEnterGuards(activated, postEnterCbs, isValid)
       const queue = enterGuards.concat(this.router.resolveHooks)
+      // 在上次的队列执行完成后再执行组件内的钩子
+      // 因为需要等待异步组件以及是OK的情况下才能执行
       runQueue(queue, iterator, () => {
         if (this.pending !== route) {
           return abort()
         }
+        // 路由过渡完成
         this.pending = null
         onComplete(route)
         if (this.router.app) {
@@ -213,6 +228,7 @@ export class History {
 
   updateRoute (route: Route) {
     const prev = this.current
+    // 将current指向我们更新后的route对象
     this.current = route
     this.cb && this.cb(route)
     this.router.afterHooks.forEach(hook => {

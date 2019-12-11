@@ -33,8 +33,11 @@ export default {
     }
   },
   render (h: Function) {
+    // 获取挂载的vueRouter实例
     const router = this.$router
+    // 获取当前的路由对象
     const current = this.$route
+    // 获取当前的匹配信息
     const { location, route, href } = router.resolve(
       this.to,
       current,
@@ -76,7 +79,7 @@ export default {
         }
       }
     }
-
+    // 事件绑定
     const on = { click: guardEvent }
     if (Array.isArray(this.event)) {
       this.event.forEach(e => {
@@ -120,9 +123,11 @@ export default {
       data.attrs = { href }
     } else {
       // find the first <a> child and apply listener and href
+      // 找到第一个a元素 给与这个元素事件绑定和href属性
       const a = findAnchor(this.$slots.default)
       if (a) {
         // in case the <a> is a static node
+        // 否自这个a是一个静态节点
         a.isStatic = false
         const aData = (a.data = extend({}, a.data))
         aData.on = aData.on || {}
@@ -147,6 +152,7 @@ export default {
         aAttrs.href = href
       } else {
         // doesn't have <a> child, apply listener to self
+        // 如果不是a元素 直接给当前元素绑定事件监听
         data.on = on
       }
     }
