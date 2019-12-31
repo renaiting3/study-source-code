@@ -19,6 +19,8 @@ import type { Matcher } from './create-matcher'
  * 参考：
  * https://blog.csdn.net/u013938465/article/details/79421239
  * https://segmentfault.com/a/1190000020245449?utm_source=tag-newest#item-2-5
+ * https://segmentfault.com/a/1190000013177857
+ * https://github.com/SHERlocked93/vue-router-analysis
  */
 
 
@@ -49,7 +51,9 @@ export default class VueRouter {
   afterHooks: Array<?AfterNavigationHook>;
 
   constructor (options: RouterOptions = {}) {
+    // 当前Vue实例
     this.app = null
+    // 所有app组件
     this.apps = []
     // vueRouter的配置项
     this.options = options
@@ -59,7 +63,7 @@ export default class VueRouter {
     this.afterHooks = []
     // 创建路由匹配实例：传入我们的routes,包含path和component对象
     this.matcher = createMatcher(options.routes || [], this) // 生成匹配表
-    // 判断路由模式
+    // 路由模式
     let mode = options.mode || 'hash'
     // 兼容低版本不支持history模式 如果不支持 回退到hash模式
     this.fallback = mode === 'history' && !supportsPushState && options.fallback !== false
@@ -71,6 +75,7 @@ export default class VueRouter {
       mode = 'abstract'
     }
     this.mode = mode
+    // 外观模式
     // 根据模式类型创建不同的history实例
     switch (mode) {
       case 'history':
@@ -88,7 +93,7 @@ export default class VueRouter {
         }
     }
   }
-  
+  // createMatcher.js 返回的match方法
   match (
     raw: RawLocation,
     current?: Route,
@@ -96,11 +101,11 @@ export default class VueRouter {
   ): Route {
     return this.matcher.match(raw, current, redirectedFrom)
   }
-
+  // 当前路由对象
   get currentRoute (): ?Route {
     return this.history && this.history.current
   }
-  // 初始化
+  // 初始化 install.js 会调用该方法进行初始化
   init (app: any /* Vue component instance */) {
     process.env.NODE_ENV !== 'production' && assert(
       install.installed,
@@ -156,23 +161,23 @@ export default class VueRouter {
       })
     })
   }
-  // 导航守卫 全局前置守卫
+  // 导航守卫 全局前置守卫 beforeHooks
   beforeEach (fn: Function): Function {
     return registerHook(this.beforeHooks, fn)
   }
-  // 导航守卫 全局解析守卫
+  // 导航守卫 全局解析守卫 resolveHooks
   beforeResolve (fn: Function): Function {
     return registerHook(this.resolveHooks, fn)
   }
-  // 导航守卫 全局后置守卫
+  // 导航守卫 全局后置守卫 afterHooks
   afterEach (fn: Function): Function {
     return registerHook(this.afterHooks, fn)
   }
-  // 路由完成初始化导航时调用
+  // 路由完成初始化导航时调用 onReady事件
   onReady (cb: Function, errorCb?: Function) {
     this.history.onReady(cb, errorCb)
   }
-  // 路由导航过程中错误被调用
+  // 路由导航过程中错误被调用 onError事件
   onError (errorCb: Function) {
     this.history.onError(errorCb)
   }
@@ -210,7 +215,7 @@ export default class VueRouter {
   forward () {
     this.go(1)
   }
-
+  // 获取路由匹配的组件
   getMatchedComponents (to?: RawLocation | Route): Array<any> {
     const route: any = to
       ? to.matched
@@ -220,13 +225,18 @@ export default class VueRouter {
     if (!route) {
       return []
     }
+    // 这个返回的是
+    // Object.keys(m.components).map(key => {
+    //   return m.components[key]
+    // })
+    // matched是路由记录的集合 最终返回的是每个路由记录的components属性值的值
     return [].concat.apply([], route.matched.map(m => {
       return Object.keys(m.components).map(key => {
         return m.components[key]
       })
     }))
   }
-  // 拼接路径
+  // 根据路由对象返回浏览器路径等信息
   resolve (
     to: RawLocation,
     current?: Route,
@@ -259,7 +269,7 @@ export default class VueRouter {
       resolved: route
     }
   }
-
+  // 动态添加路由
   addRoutes (routes: Array<RouteConfig>) {
     this.matcher.addRoutes(routes)
     if (this.history.current !== START) {

@@ -23,6 +23,7 @@ export const supportsPushState =
   })()
 
 export function pushState (url?: string, replace?: boolean) {
+  // 保存滚动记录
   saveScrollPosition()
   // try...catch the pushState call to get around Safari
   // DOM Exception 18 where it limits to 100 pushState calls
@@ -30,10 +31,13 @@ export function pushState (url?: string, replace?: boolean) {
   try {
     if (replace) {
       // preserve existing history state as it could be overriden by the user
+      // 保存现有的历史状态，因为它可以被用户重写
       const stateCopy = extend({}, history.state)
       stateCopy.key = getStateKey()
+      // 如果是replace直接替换老的key对应的url，而push是新建key
       history.replaceState(stateCopy, '', url)
     } else {
+      // 通过window.performance.now()生成一个key 并设置
       history.pushState({ key: setStateKey(genStateKey()) }, '', url)
     }
   } catch (e) {
